@@ -1,0 +1,11 @@
+/* Tabulate some Fibonnaci numbers */
+let
+    var N := 20
+    var fib := intArray [ N ] of 0
+in
+    fib[1] := 1;
+    for i := 2 to N-1
+    do fib[i] := fib[i-1] + fib[i-2];
+    for i := 0 to N-1
+    do printi(fib[i])
+end
