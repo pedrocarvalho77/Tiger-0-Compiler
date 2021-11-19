@@ -1,3 +1,11 @@
-# Tiger-0-Compiler
 
-Implementação de um compilador básico para um subconjunto Tiger-0 da linguagem Tiger, uma linguagem imperativa simples definida no livro Modern Compiler Implementation in ML de Andrew Appel (Cambridge University Press, 1998). O compilador deverá ler código fonte Tiger e gerar código assembly MIPS.
+# Trabalho laboratorial de Compiladores (CC3001)
+
+## Compilador para Tiger-0
+
+* Descrição do trabalho em [trabalho.pdf](trabalho.pdf)
+* Descrição da linguagem em [tiger0-reference.pdf](tiger0-reference.pdf)
+
+----
+
+Pedro Vasconcelos, 2021
