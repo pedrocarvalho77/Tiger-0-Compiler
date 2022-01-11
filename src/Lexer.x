@@ -6,12 +6,14 @@ module Lexer where
 
 $alpha = [_a-zA-Z]
 $digit = [0-9]
+$special = [\.\;\,\$\|\*\+\?\#\~\-\{\}\(\)\[\]\^\/]
 
 tokens :-
 
 $white+                                                 ; -- ignorar carateres brancos
 "/*"([^\*]|[\r\n]|("*"+([^\*\/]|[\r\n])))*"*"+"/"       ; -- ignorar comentarios multi-linha
-"int"                                                   { \_ -> TOK_INT }
+"int"                                                   { \_ -> TOK_TYPE_INT }
+"string"                                                { \_ -> TOK_TYPE_STRING }
 "+"                                                     { \_ -> TOK_PLUS} 
 "-"                                                     { \_ -> TOK_MINUS} 
 "*"                                                     { \_ -> TOK_MULT}  
@@ -40,19 +42,21 @@ in                                                      { \_ -> TOK_IN }
 end                                                     { \_ -> TOK_END }
 "scani"                                                 { \_ -> TOK_SCANI }
 "printi"                                                { \_ -> TOK_PRINTI }
---"&"                                                   { \_ -> TOK_AND}
---"|"                                                   { \_ -> TOK_OR}
---for                                                   { \_ -> TOK_FOR}
---to                                                    { \_ -> TOK_TO}
---break                                                 { \_ -> TOK_BREAK}
---"string"                                              { \_ -> TOK_STRING}
---"print"                                               { \_ -> TOK_PRINT }
---"["                                                   { \_ -> TOK_L_SQUARE_BRACKET}
---"]"                                                   { \_ -> TOK_R_SQUARE_BRACKET}
---of                                                    { \_ -> TOK_OF}
---","                                                   { \_ -> TOK_COMMA}
+"&"                                                     { \_ -> TOK_AND}
+"|"                                                     { \_ -> TOK_OR}
+for                                                     { \_ -> TOK_FOR}
+to                                                      { \_ -> TOK_TO}
+break                                                   { \_ -> TOK_BREAK}
+"print"                                                 { \_ -> TOK_PRINT }
+"["                                                     { \_ -> TOK_L_SQUARE_BRACKET}
+"]"                                                     { \_ -> TOK_R_SQUARE_BRACKET}
+of                                                      { \_ -> TOK_OF}
+","                                                     { \_ -> TOK_COMMA}
 $alpha($alpha|$digit)*                                  { \s -> TOK_ID s }
 $digit+                                                 { \s -> TOK_NUM (read s) }
+--"\".*\""                                                { \s -> TOK_STRING s}
+
 {
-data Token = TOK_ID String | TOK_NUM Int | TOK_INT | TOK_PLUS | TOK_MINUS | TOK_MULT | TOK_DIV | TOK_MOD | TOK_VAR | TOK_ASSIGN | TOK_EQUAL | TOK_DIFF | TOK_LESS | TOK_LESS_OR_EQUAL | TOK_GREATER | TOK_GREATER_OR_EQUAL | TOK_IF | TOK_THEN | TOK_ELSE | TOK_LPAREN | TOK_RPAREN | TOK_SEMICOLON | TOK_WHILE | TOK_DO | TOK_FUNC | TOK_COLON | TOK_LET | TOK_IN | TOK_END | TOK_SCANI | TOK_PRINTI deriving(Eq, Show)
+data Token = TOK_ID String | TOK_NUM Int | TOK_TYPE_INT | TOK_TYPE_STRING | TOK_PLUS | TOK_MINUS | TOK_MULT | TOK_DIV | TOK_MOD | TOK_VAR | TOK_ASSIGN | TOK_EQUAL | TOK_DIFF | TOK_LESS | TOK_LESS_OR_EQUAL | TOK_GREATER | TOK_GREATER_OR_EQUAL | TOK_IF | TOK_THEN | TOK_ELSE | TOK_LPAREN | TOK_RPAREN | TOK_SEMICOLON | TOK_WHILE | TOK_DO | TOK_FUNC | TOK_COLON | TOK_LET | TOK_IN | TOK_END | TOK_SCANI | TOK_PRINTI | TOK_COMMA | TOK_FOR | TOK_TO | TOK_BREAK | TOK_PRINT | TOK_AND | TOK_OR | TOK_L_SQUARE_BRACKET | TOK_R_SQUARE_BRACKET |TOK_OF deriving(Eq, Show)
+--TOK_STRING String | 
 }
