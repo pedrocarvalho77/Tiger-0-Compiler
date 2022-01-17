@@ -86,19 +86,19 @@ typeField : id ':' typeId                       { TypeField $1 $3 }
 
 expr : num                                         { Num $1 }
      | id                                          { Var $1 }
-     | expr '+' expr                               { Plus $1 $3 }
-     | expr '-' expr                               { Minus $1 $3 }
-     | expr '*' expr                               { Times $1 $3 }
-     | expr '/' expr                               { Div $1 $3 }
-     | expr '%' expr                               { Mod $1 $3 }
-     | expr '=' expr                               { Eq $1 $3 }
-     | expr '<>' expr                              { Diff $1 $3 }
-     | expr '<' expr                               { Lt $1 $3 }
-     | expr '<=' expr                              { Lteq $1 $3 }
-     | expr '>'  expr                              { Gt $1 $3 }
-     | expr '>=' expr                              { Gteq $1 $3 }
-     | expr '&' expr                               { And $1 $3 }
-     | expr '|' expr                               { Or $1 $3 }
+     | expr '+' expr                               { OpBin Plus $1 $3 }
+     | expr '-' expr                               { OpBin Minus $1 $3 }
+     | expr '*' expr                               { OpBin Times $1 $3 }
+     | expr '/' expr                               { OpBin Div $1 $3 }
+     | expr '%' expr                               { OpBin Mod $1 $3 }
+     | expr '=' expr                               { OpRel Eq $1 $3 }
+     | expr '<>' expr                              { OpRel Diff $1 $3 }
+     | expr '<' expr                               { OpRel Lt $1 $3 }
+     | expr '<=' expr                              { OpRel Lteq $1 $3 }
+     | expr '>'  expr                              { OpRel Gt $1 $3 }
+     | expr '>=' expr                              { OpRel Gteq $1 $3 }
+     | expr '&' expr                               { OpRel And $1 $3 }
+     | expr '|' expr                               { OpRel Or $1 $3 }
      | '-' expr %prec NEG                          { NegExp $2 }
      | id ':=' expr                                { Assign $1 $3 }
      | id '(' exprList ')'                         { FunCall $1 $3 }
@@ -150,19 +150,8 @@ data Type = TypeInt | TypeString
 
 data Exp = Num Int
          | Var Ident
-         | Plus Exp Exp
-         | Minus Exp Exp
-         | Times Exp Exp
-         | Div Exp Exp
-         | Mod Exp Exp
-         | Eq Exp Exp
-         | Diff Exp Exp
-         | Lt Exp Exp
-         | Lteq Exp Exp
-         | Gt Exp Exp
-         | Gteq Exp Exp
-         | And Exp Exp
-         | Or Exp Exp
+         | OpBin BinOp Exp Exp
+         | OpRel RelOp Exp Exp
          | NegExp Exp
          | Assign Ident Exp
          | FunCall Ident [Exp]
@@ -178,7 +167,24 @@ data Exp = Num Int
         -- | Print String
     deriving Show
 
+data BinOp = Plus
+        | Minus
+        | Times
+        | Div
+        | Mod
+        deriving (Eq, Show)
+
+data RelOp = Eq
+        | Diff
+        | Lt 
+        | Lteq
+        | Gt 
+        | Gteq 
+        | And 
+        | Or 
+        deriving (Eq, Show)    
+
 parseError :: [Token] -> a
---parseError toks = error "parse error"
-parseError toks = error ("parse error" ++ show toks)
+parseError toks = error "parse error"
+--parseError toks = error ("parse error" ++ show toks)
 }
