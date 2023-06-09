@@ -1,10 +1,10 @@
 
-# Trabalho laboratorial de Compiladores (CC3001)
+# Compiler Lab Work (CC3001)
 
-## Compilador para Tiger-0
+## Compiler for Tiger-0
 
-* Descrição do trabalho em [trabalho.pdf](trabalho.pdf)
-* Descrição da linguagem em [tiger0-reference.pdf](tiger0-reference.pdf)
+* Lab work description in [trabalho.pdf](trabalho.pdf)
+* Language description in [tiger0-reference.pdf](tiger0-reference.pdf)
 
 ----
 
