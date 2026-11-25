@@ -1,0 +1,6 @@
+let
+    function hello() = printi(42)
+    function two(a: int, b: int): int = a + b
+in
+    hello();
+    printi(two(1, 2))

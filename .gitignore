@@ -1,0 +1,4 @@
+build/
+tiger
+*.o
+*.hi

@@ -11,9 +11,10 @@ import Lexer
 
 num         { TOK_NUM $$ }
 id          { TOK_ID $$ }
---string      { TOK_STRING $$ }
+string      { TOK_STRING $$ }
 'int'       { TOK_TYPE_INT }
 'string'    { TOK_TYPE_STRING }
+'intArray'  { TOK_TYPE_INTARRAY }
 '+'         { TOK_PLUS } 
 '-'         { TOK_MINUS } 
 '*'         { TOK_MULT }  
@@ -47,26 +48,30 @@ for         { TOK_FOR }
 to          { TOK_TO }
 break       { TOK_BREAK }
 'print'     { TOK_PRINT }
+'not'       { TOK_NOT }
 '&'         { TOK_AND }
 '|'         { TOK_OR } 
 '['         { TOK_L_SQUARE_BRACKET }
 ']'         { TOK_R_SQUARE_BRACKET }
 of          { TOK_OF }
 
---precedencia
-%nonassoc ':='
-%left '&' '|'
-%nonassoc '>=' '<=' '=' '<>' '<' '>'
-%left '+' '-'
-%left '*' '/'
-%left '%'
+--precedencia (do mais baixo para o mais alto), como no enunciado
+-- OUTERTHEN tambem serve para as construcoes que terminam numa expressao
+-- (while, for, intArray): o corpo estende-se o mais possivel para a direita.
 %nonassoc OUTERTHEN
 %nonassoc else
+%nonassoc ':='
+%left '|'
+%left '&'
+%nonassoc '>=' '<=' '=' '<>' '<' '>'
+%left '+' '-'
+%left '*' '/' '%'
 %left NEG
 
 %%
 
-program : let declList in exprSeq          { LetIn $2 $4 }    
+program : let declList in exprSeq          { LetIn $2 $4 }
+        | let declList in exprSeq end      { LetIn $2 $4 }  -- os exemplos do enunciado terminam por vezes com 'end'
 
 declList : decl                                   { [$1] }
          | decl declList                         {  $1 : $2 }
@@ -79,13 +84,19 @@ varDecl : var id ':=' expr                         { Decl $2 $4 }
 funDecl : function id '(' typeFields ')' '=' expr            { FunDef $2 $4 $7 }
         | function id '(' typeFields ')' ':' typeId '=' expr  { FunDefType $2 $4 $7 $9 }
         
-typeFields : typeField                          { [$1] }
-           | typeField ',' typeFields          { $1 : $3 }
+typeFields : {- vazio -}                        { [] }
+           | typeFieldList                      { $1 }
+
+typeFieldList : typeField                          { [$1] }
+           | typeField ',' typeFieldList      { $1 : $3 }
            
 typeField : id ':' typeId                       { TypeField $1 $3 }
 
 expr : num                                         { Num $1 }
+     | string                                      { Str $1 }
      | id                                          { Var $1 }
+     | id '[' expr ']'                             { Index $1 $3 }
+     | 'intArray' '[' expr ']' of expr             %prec OUTERTHEN       { ArrayNew $3 $6 }
      | expr '+' expr                               { OpBin Plus $1 $3 }
      | expr '-' expr                               { OpBin Minus $1 $3 }
      | expr '*' expr                               { OpBin Times $1 $3 }
@@ -101,17 +112,21 @@ expr : num                                         { Num $1 }
      | expr '|' expr                               { OpRel Or $1 $3 }
      | '-' expr %prec NEG                          { NegExp $2 }
      | id ':=' expr                                { Assign $1 $3 }
+     | id '[' expr ']' ':=' expr                   { AssignIndex $1 $3 $6 }
+     | id '(' ')'                                  { FunCall $1 [] }
      | id '(' exprList ')'                         { FunCall $1 $3 }
+     | '(' ')'                                     { ExprSeq [] }
      | '(' exprSeq ')'                             { ExprSeq $2 }
      | if expr then expr else expr                 { IfThenElse $2 $4 $6 }
      | if expr then expr %prec OUTERTHEN           { IfThen $2 $4 }
-     | while expr do expr                          { WhileDo $2 $4 }
-     | for id ':=' expr to expr do expr            { ForToDo $2 $4 $6 $8 }
+     | while expr do expr %prec OUTERTHEN          { WhileDo $2 $4 }
+     | for id ':=' expr to expr do expr %prec OUTERTHEN { ForToDo $2 $4 $6 $8 }
      | break                                       { Break }
      | let varDeclList in exprSeq end              { LetInEnd $2 $4 }
+     | 'not' '(' expr ')'                          { Not $3 }
      | 'printi' '(' expr ')'                       { PrintInt $3 }
      | 'scani' '(' ')'                             { ScanInt }
-     -- | 'print' '(' string ')'                      { Print $3 }
+     | 'print' '(' expr ')'                        { Print $3 }
 
 exprSeq : expr                                     { [$1] }
         | expr ';' exprSeq                         { $1 : $3 }
@@ -124,6 +139,7 @@ varDeclList : varDecl                              { [$1] }
 
 typeId : 'int'                                     { TypeInt }
        | 'string'                                  { TypeString }
+       | 'intArray'                                { TypeIntArray }
 {
 
 type Ident = String
@@ -145,14 +161,19 @@ data Fun = FunDef Ident [TpFields] Exp
 data TpFields = TypeField Ident Type
     deriving Show
 
-data Type = TypeInt | TypeString
+data Type = TypeInt | TypeString | TypeIntArray
     deriving (Eq, Show)
 
 data Exp = Num Int
+         | Str String
          | Var Ident
+         | Index Ident Exp
+         | ArrayNew Exp Exp
+         | AssignIndex Ident Exp Exp
          | OpBin BinOp Exp Exp
          | OpRel RelOp Exp Exp
          | NegExp Exp
+         | Not Exp
          | Assign Ident Exp
          | FunCall Ident [Exp]
          | ExprSeq [Exp]
@@ -164,7 +185,7 @@ data Exp = Num Int
          | LetInEnd [Var] [Exp]
          | PrintInt Exp
          | ScanInt
-        -- | Print String
+         | Print Exp
     deriving Show
 
 data BinOp = Plus
@@ -185,6 +206,5 @@ data RelOp = Eq
         deriving (Eq, Show)    
 
 parseError :: [Token] -> a
-parseError toks = error "parse error"
---parseError toks = error ("parse error" ++ show toks)
+parseError toks = error ("parse error perto de: " ++ show (take 3 toks))
 }

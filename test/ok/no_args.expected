@@ -1,0 +1,1 @@
+LetIn [FunDecl (FunDef "hello" [] (PrintInt (Num 42))),FunDecl (FunDefType "two" [TypeField "a" TypeInt,TypeField "b" TypeInt] TypeInt (OpBin Plus (Var "a") (Var "b")))] [FunCall "hello" [],PrintInt (FunCall "two" [Num 1,Num 2])]

@@ -1,0 +1,1 @@
+LetIn [VarDecl (Decl "x" (Num 1))] [IfThenElse (OpRel Lt (Var "x") (Num 2)) (OpBin Plus (OpBin Times (Var "x") (Num 3)) (Num 1)) (OpBin Minus (Var "x") (Num 1))]
