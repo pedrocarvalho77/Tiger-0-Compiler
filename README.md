@@ -13,12 +13,15 @@ Reads a Tiger-0 program from stdin and writes MIPS assembly (SPIM/MARS) to stdou
 |-------|------|
 | Lexer | `src/Lexer.x` |
 | Parser (AST) | `src/Parser.y` (no shift/reduce conflicts; precedences as in the spec) |
+| Type checker | `src/TypeCheck.hs` |
 | Intermediate code (three-address) | `src/Interm.hs` |
 | MIPS generation | `src/TigerMips.hs` |
 
-Supported: integers, strings (only for `print`), `intArray`, variables, functions, `if`, `while`, `for`, `break`, `let`, `print`, `printi`, `scani`. Top-level `var`s are globals; functions see them.
+Supported: integers, strings (only for `print`), `intArray`, variables, functions, `if`, `while`, `for`, `break`, `let`, `not`, `print`, `printi`, `scani`. Top-level `var`s are globals; functions see them.
 
-Limitations: there is no semantic analysis (no type or scope checking beyond undeclared names), functions take at most 4 arguments, strings cannot be compared or stored in arrays, and there are no array bounds or division-by-zero checks.
+Type and scope errors (wrong operand or argument types, wrong argument count, undeclared names, `break` outside a loop, assigning to a `for` variable, ...) are reported on stderr before any code is generated; error messages have no source positions.
+
+Limitations: functions take at most 4 arguments, strings cannot be compared (rejected by the type checker) or stored in arrays, and there are no array bounds or division-by-zero checks.
 
 ## Requirements
 
@@ -42,7 +45,7 @@ MARS_JAR=/path/to/Mars4_5.jar make test    # also runs the generated MIPS
 ```
 
 * `test/ok/` programs that must parse (AST compared with `.expected`) and print the output in `.out` (stdin from `.in`). The output is checked by running the intermediate code with the small interpreter in `test/IRRun.hs`, and by MARS when `MARS_JAR` is set.
-* `test/fail/` programs that must be rejected by the parser.
+* `test/fail/` programs that must be rejected (syntax or type errors).
 * Regenerate the AST files with `UPDATE=1 test/run.sh`.
 
 ------|-------|

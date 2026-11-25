@@ -1,0 +1,1 @@
+LetIn [VarDecl (Decl "a" (Num 0)),VarDecl (Decl "b" (Num 5))] [ExprSeq [PrintInt (Not (Var "a")),PrintInt (Not (Var "b")),PrintInt (OpRel Or (Not (OpRel Lt (Var "a") (Var "b"))) (Not (Num 0))),IfThenElse (OpRel And (Not (OpRel Eq (Var "a") (Var "b"))) (Not (OpRel Gt (Var "a") (Var "b")))) (Print (Str " ok")) (Print (Str " bad"))]]

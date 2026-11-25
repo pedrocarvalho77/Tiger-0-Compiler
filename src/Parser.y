@@ -48,6 +48,7 @@ for         { TOK_FOR }
 to          { TOK_TO }
 break       { TOK_BREAK }
 'print'     { TOK_PRINT }
+'not'       { TOK_NOT }
 '&'         { TOK_AND }
 '|'         { TOK_OR } 
 '['         { TOK_L_SQUARE_BRACKET }
@@ -122,6 +123,7 @@ expr : num                                         { Num $1 }
      | for id ':=' expr to expr do expr %prec OUTERTHEN { ForToDo $2 $4 $6 $8 }
      | break                                       { Break }
      | let varDeclList in exprSeq end              { LetInEnd $2 $4 }
+     | 'not' '(' expr ')'                          { Not $3 }
      | 'printi' '(' expr ')'                       { PrintInt $3 }
      | 'scani' '(' ')'                             { ScanInt }
      | 'print' '(' expr ')'                        { Print $3 }
@@ -171,6 +173,7 @@ data Exp = Num Int
          | OpBin BinOp Exp Exp
          | OpRel RelOp Exp Exp
          | NegExp Exp
+         | Not Exp
          | Assign Ident Exp
          | FunCall Ident [Exp]
          | ExprSeq [Exp]

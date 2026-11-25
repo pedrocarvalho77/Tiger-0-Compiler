@@ -131,12 +131,8 @@ transExp env dest (OpBin op e1 e2)
                  (t2, c2) <- asTemp env e2
                  return (c1 ++ c2 ++ [OP op d t1 t2])
 
-transExp env dest (OpRel op e1 e2)
-  = do d <- destOrNew dest
-       ltrue <- newLabel
-       lfalse <- newLabel
-       code <- transCond env (OpRel op e1 e2) ltrue lfalse
-       return ([MOVEI d 0] ++ code ++ [LABEL ltrue, MOVEI d 1, LABEL lfalse])
+transExp env dest e@(OpRel _ _ _) = boolValue env dest e
+transExp env dest e@(Not _) = boolValue env dest e
 
 transExp env _ (Assign x e)
   = case lookupVar env x of
@@ -227,6 +223,15 @@ transExp _ dest ScanInt
   = do d <- destOrNew dest
        return [CALL d rtScani []]
 
+-- Valor 0/1 de uma condicao.
+boolValue :: Env -> Maybe Temp -> Exp -> M [Instr]
+boolValue env dest e
+  = do d <- destOrNew dest
+       ltrue <- newLabel
+       lfalse <- newLabel
+       code <- transCond env e ltrue lfalse
+       return ([MOVEI d 0] ++ code ++ [LABEL ltrue, MOVEI d 1, LABEL lfalse])
+
 -- Todas as expressoes menos a ultima descartam o valor.
 transSeq :: Env -> Maybe Temp -> [Exp] -> M [Instr]
 transSeq _ _ [] = return []
@@ -248,6 +253,8 @@ transCond env (OpRel Or e1 e2) ltrue lfalse
        code1 <- transCond env e1 ltrue lnext
        code2 <- transCond env e2 ltrue lfalse
        return (code1 ++ [LABEL lnext] ++ code2)
+
+transCond env (Not e) ltrue lfalse = transCond env e lfalse ltrue
 
 transCond env (OpRel op e1 e2) ltrue lfalse
   = do (t1, c1) <- asTemp env e1
