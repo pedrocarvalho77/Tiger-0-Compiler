@@ -11,9 +11,10 @@ import Lexer
 
 num         { TOK_NUM $$ }
 id          { TOK_ID $$ }
---string      { TOK_STRING $$ }
+string      { TOK_STRING $$ }
 'int'       { TOK_TYPE_INT }
 'string'    { TOK_TYPE_STRING }
+'intArray'  { TOK_TYPE_INTARRAY }
 '+'         { TOK_PLUS } 
 '-'         { TOK_MINUS } 
 '*'         { TOK_MULT }  
@@ -53,15 +54,17 @@ break       { TOK_BREAK }
 ']'         { TOK_R_SQUARE_BRACKET }
 of          { TOK_OF }
 
---precedencia (do mais baixo para o mais alto)
+--precedencia (do mais baixo para o mais alto), como no enunciado
+-- OUTERTHEN tambem serve para as construcoes que terminam numa expressao
+-- (while, for, intArray): o corpo estende-se o mais possivel para a direita.
 %nonassoc OUTERTHEN
 %nonassoc else
 %nonassoc ':='
-%left '&' '|'
+%left '|'
+%left '&'
 %nonassoc '>=' '<=' '=' '<>' '<' '>'
 %left '+' '-'
-%left '*' '/'
-%left '%'
+%left '*' '/' '%'
 %left NEG
 
 %%
@@ -89,7 +92,10 @@ typeFieldList : typeField                          { [$1] }
 typeField : id ':' typeId                       { TypeField $1 $3 }
 
 expr : num                                         { Num $1 }
+     | string                                      { Str $1 }
      | id                                          { Var $1 }
+     | id '[' expr ']'                             { Index $1 $3 }
+     | 'intArray' '[' expr ']' of expr             %prec OUTERTHEN       { ArrayNew $3 $6 }
      | expr '+' expr                               { OpBin Plus $1 $3 }
      | expr '-' expr                               { OpBin Minus $1 $3 }
      | expr '*' expr                               { OpBin Times $1 $3 }
@@ -105,18 +111,20 @@ expr : num                                         { Num $1 }
      | expr '|' expr                               { OpRel Or $1 $3 }
      | '-' expr %prec NEG                          { NegExp $2 }
      | id ':=' expr                                { Assign $1 $3 }
+     | id '[' expr ']' ':=' expr                   { AssignIndex $1 $3 $6 }
      | id '(' ')'                                  { FunCall $1 [] }
      | id '(' exprList ')'                         { FunCall $1 $3 }
+     | '(' ')'                                     { ExprSeq [] }
      | '(' exprSeq ')'                             { ExprSeq $2 }
      | if expr then expr else expr                 { IfThenElse $2 $4 $6 }
      | if expr then expr %prec OUTERTHEN           { IfThen $2 $4 }
-     | while expr do expr                          { WhileDo $2 $4 }
-     | for id ':=' expr to expr do expr            { ForToDo $2 $4 $6 $8 }
+     | while expr do expr %prec OUTERTHEN          { WhileDo $2 $4 }
+     | for id ':=' expr to expr do expr %prec OUTERTHEN { ForToDo $2 $4 $6 $8 }
      | break                                       { Break }
      | let varDeclList in exprSeq end              { LetInEnd $2 $4 }
      | 'printi' '(' expr ')'                       { PrintInt $3 }
      | 'scani' '(' ')'                             { ScanInt }
-     -- | 'print' '(' string ')'                      { Print $3 }
+     | 'print' '(' expr ')'                        { Print $3 }
 
 exprSeq : expr                                     { [$1] }
         | expr ';' exprSeq                         { $1 : $3 }
@@ -129,6 +137,7 @@ varDeclList : varDecl                              { [$1] }
 
 typeId : 'int'                                     { TypeInt }
        | 'string'                                  { TypeString }
+       | 'intArray'                                { TypeIntArray }
 {
 
 type Ident = String
@@ -150,11 +159,15 @@ data Fun = FunDef Ident [TpFields] Exp
 data TpFields = TypeField Ident Type
     deriving Show
 
-data Type = TypeInt | TypeString
+data Type = TypeInt | TypeString | TypeIntArray
     deriving (Eq, Show)
 
 data Exp = Num Int
+         | Str String
          | Var Ident
+         | Index Ident Exp
+         | ArrayNew Exp Exp
+         | AssignIndex Ident Exp Exp
          | OpBin BinOp Exp Exp
          | OpRel RelOp Exp Exp
          | NegExp Exp
@@ -169,7 +182,7 @@ data Exp = Num Int
          | LetInEnd [Var] [Exp]
          | PrintInt Exp
          | ScanInt
-        -- | Print String
+         | Print Exp
     deriving Show
 
 data BinOp = Plus

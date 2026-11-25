@@ -1,0 +1,1 @@
+LetIn [VarDecl (Decl "x" (Num 1))] [ExprSeq [Print (Str "a\tb\n\"q\""),PrintInt (OpRel Or (Num 1) (OpRel And (Num 0) (OpRel Eq (Num 0) (OpBin Plus (Num 1) (OpBin Mod (OpBin Times (Num 2) (Num 3)) (Num 2)))))),ExprSeq []]]
