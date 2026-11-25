@@ -2,7 +2,7 @@
 BUILD = build
 GHC   = ghc -isrc -i$(BUILD) -outputdir $(BUILD) -package mtl
 
-tiger: src/Main.hs $(BUILD)/Lexer.hs $(BUILD)/Parser.hs
+tiger: $(wildcard src/*.hs) $(BUILD)/Lexer.hs $(BUILD)/Parser.hs
 	$(GHC) src/Main.hs -o $@
 
 $(BUILD)/Lexer.hs: src/Lexer.x
@@ -13,9 +13,11 @@ $(BUILD)/Parser.hs: src/Parser.y
 	@mkdir -p $(BUILD)
 	happy --ghc $< -o $@
 
-# Interm e TigerMips ainda não são usados pelo Main: só verificamos que compilam.
-test: tiger
-	$(GHC) -fno-code src/Interm.hs src/TigerMips.hs
+$(BUILD)/irrun: test/IRRun.hs $(wildcard src/*.hs) $(BUILD)/Lexer.hs $(BUILD)/Parser.hs
+	$(GHC) -package containers test/IRRun.hs -o $@
+
+# Com MARS_JAR=/caminho/Mars4_5.jar os testes executam tambem o MIPS gerado.
+test: tiger $(BUILD)/irrun
 	./test/run.sh
 
 clean:

@@ -5,10 +5,47 @@ Front end for **Tiger-0**, a small subset of Tiger (Appel) used in the Compilers
 * Lab work description: [trabalho.pdf](trabalho.pdf)
 * Language description: [tiger0-reference.pdf](tiger0-reference.pdf) ([markdown version](tiger0-reference.md))
 
-## Status
+## What it does
 
-| Part | State |
-|------|-------|
+Reads a Tiger-0 program from stdin and writes MIPS assembly (SPIM/MARS) to stdout.
+
+| Stage | File |
+|-------|------|
+| Lexer | `src/Lexer.x` |
+| Parser (AST) | `src/Parser.y` (no shift/reduce conflicts; precedences as in the spec) |
+| Intermediate code (three-address) | `src/Interm.hs` |
+| MIPS generation | `src/TigerMips.hs` |
+
+Supported: integers, strings (only for `print`), `intArray`, variables, functions, `if`, `while`, `for`, `break`, `let`, `print`, `printi`, `scani`. Top-level `var`s are globals; functions see them.
+
+Limitations: there is no semantic analysis (no type or scope checking beyond undeclared names), functions take at most 4 arguments, strings cannot be compared or stored in arrays, and there are no array bounds or division-by-zero checks.
+
+## Requirements
+
+`ghc` (with the `mtl` and `containers` packages), `alex` and `happy`. To run the generated assembly, a MIPS simulator such as [MARS](https://github.com/dpetersanderson/MARS) or SPIM.
+
+## Build and run
+
+```sh
+make
+./tiger < test/ok/factorial.tig > factorial.s     # MIPS assembly
+java -jar Mars4_5.jar nc factorial.s              # prints 3628800
+./tiger --ir  < test/ok/factorial.tig             # intermediate code
+./tiger --ast < test/ok/factorial.tig             # abstract syntax tree
+```
+
+## Tests
+
+```sh
+make test
+MARS_JAR=/path/to/Mars4_5.jar make test    # also runs the generated MIPS
+```
+
+* `test/ok/` programs that must parse (AST compared with `.expected`) and print the output in `.out` (stdin from `.in`). The output is checked by running the intermediate code with the small interpreter in `test/IRRun.hs`, and by MARS when `MARS_JAR` is set.
+* `test/fail/` programs that must be rejected by the parser.
+* Regenerate the AST files with `UPDATE=1 test/run.sh`.
+
+------|-------|
 | Lexer (`src/Lexer.x`) | done (no string literals yet) |
 | Parser (`src/Parser.y`) | done for integers, variables, functions, `if`, `while`, `for`, `let`, `printi`, `scani`. Strings, `print` and arrays (`intArray [n] of v`, `a[i]`) are **not** supported yet |
 | Intermediate code (`src/Interm.hs`) | work in progress, only type-checked, not wired into `Main` |
