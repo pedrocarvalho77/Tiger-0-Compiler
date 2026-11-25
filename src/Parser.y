@@ -53,20 +53,21 @@ break       { TOK_BREAK }
 ']'         { TOK_R_SQUARE_BRACKET }
 of          { TOK_OF }
 
---precedencia
+--precedencia (do mais baixo para o mais alto)
+%nonassoc OUTERTHEN
+%nonassoc else
 %nonassoc ':='
 %left '&' '|'
 %nonassoc '>=' '<=' '=' '<>' '<' '>'
 %left '+' '-'
 %left '*' '/'
 %left '%'
-%nonassoc OUTERTHEN
-%nonassoc else
 %left NEG
 
 %%
 
-program : let declList in exprSeq          { LetIn $2 $4 }    
+program : let declList in exprSeq          { LetIn $2 $4 }
+        | let declList in exprSeq end      { LetIn $2 $4 }  -- os exemplos do enunciado terminam por vezes com 'end'
 
 declList : decl                                   { [$1] }
          | decl declList                         {  $1 : $2 }
@@ -79,8 +80,11 @@ varDecl : var id ':=' expr                         { Decl $2 $4 }
 funDecl : function id '(' typeFields ')' '=' expr            { FunDef $2 $4 $7 }
         | function id '(' typeFields ')' ':' typeId '=' expr  { FunDefType $2 $4 $7 $9 }
         
-typeFields : typeField                          { [$1] }
-           | typeField ',' typeFields          { $1 : $3 }
+typeFields : {- vazio -}                        { [] }
+           | typeFieldList                      { $1 }
+
+typeFieldList : typeField                          { [$1] }
+           | typeField ',' typeFieldList      { $1 : $3 }
            
 typeField : id ':' typeId                       { TypeField $1 $3 }
 
@@ -101,6 +105,7 @@ expr : num                                         { Num $1 }
      | expr '|' expr                               { OpRel Or $1 $3 }
      | '-' expr %prec NEG                          { NegExp $2 }
      | id ':=' expr                                { Assign $1 $3 }
+     | id '(' ')'                                  { FunCall $1 [] }
      | id '(' exprList ')'                         { FunCall $1 $3 }
      | '(' exprSeq ')'                             { ExprSeq $2 }
      | if expr then expr else expr                 { IfThenElse $2 $4 $6 }
@@ -185,6 +190,5 @@ data RelOp = Eq
         deriving (Eq, Show)    
 
 parseError :: [Token] -> a
-parseError toks = error "parse error"
---parseError toks = error ("parse error" ++ show toks)
+parseError toks = error ("parse error perto de: " ++ show (take 3 toks))
 }

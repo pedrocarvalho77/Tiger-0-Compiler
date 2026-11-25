@@ -1,0 +1,1 @@
+LetIn [FunDecl (FunDefType "fact" [TypeField "n" TypeInt] TypeInt (IfThenElse (OpRel Gt (Var "n") (Num 0)) (OpBin Times (Var "n") (FunCall "fact" [OpBin Minus (Var "n") (Num 1)])) (Num 1)))] [PrintInt (FunCall "fact" [Num 10])]

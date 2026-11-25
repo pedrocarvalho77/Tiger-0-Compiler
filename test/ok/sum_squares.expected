@@ -1,0 +1,1 @@
+LetIn [VarDecl (Decl "s" (Num 0)),VarDecl (Decl "n" (Num 1))] [WhileDo (OpRel Lteq (Var "n") (Num 10)) (ExprSeq [Assign "s" (OpBin Plus (Var "s") (OpBin Times (Var "n") (Var "n"))),Assign "n" (OpBin Plus (Var "n") (Num 1))]),PrintInt (Var "n")]

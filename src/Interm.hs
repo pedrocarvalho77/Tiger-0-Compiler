@@ -108,7 +108,7 @@ transCond (cond, table, ltrue, lfalse)
         Or ->
           do lnext <- newLabel
              code1 <- transCond(exp1, table, ltrue, lnext)
-             code2 <- transCond(exp1, table, ltrue, lfalse)
+             code2 <- transCond(exp2, table, ltrue, lfalse)
              return (code1 ++ [LABEL lnext] ++ code2)
            
         otherwise ->
